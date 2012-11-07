@@ -1,0 +1,97 @@
+The Goodwin Email Portlet was written for a portal at the Goodwin College at Drexel University.
+
+The idea was to replace the email lists that we were using to communicate with faculty and staff. There were several of these floating around and one central one that was a hassle to keep up to date. We came up with a mechanism to have one always up-to-date list, but then there was the challenge of helping key staff members remember what the correct addresses were. This portlet is the solution to that problem. Instead of sending all-staff emails from their normal mail clients they will log in to the portal and send those emails using this portlet. The recipients are chosen from a drop-down list, the contents of which can be updated by a portal admin (if you configure the portlet correctly).
+
+The portlet will send emails from the address of the currently logged in user. By default emails are sent as html and that can be changed in the code. With a little code change you could make that a configuration setting or selectable by the email author.
+
+Emails can have unlimited attachments up to the total size configured in your application context (see portletMultipartResolver). By default it is generously set to 50MB. 
+
+----
+ UI
+----
+
+The UI makes use of the jquery version already incldued with liferay (1.4.2) and a Jquery plugin, asmselect, for the recipient selector.
+
+The portlet has a ckeditor for WYSIWYG editing of the email's contents. There is no built-in spellchecker for the email body, instead it depends on the browser's spellchecking to be turned on. If you do a little research you will find many options for adding spellchecking to ckeditor and you can configure that for your portlet.
+
+-------------
+SENDING EMAIL
+-------------
+
+This portlet makes use of Liferay's MailEngine to actually send the email, which is using JavaMail in the back and will go out through whatever MTA you have configured on your server, for example, sendmail. It is up to you to have your mail server configured so that mail can be sent to the addresses in the recipient list from the addresses stored in the liferay users' profiles. I recommend also configuring your mail server so that recipients do not recieve duplicate copies of the same message. Setting that up is beyond the scope of this README.
+
+---------------
+Liferay version
+---------------
+
+This is meant to be built against Liferay v5.2.3.1
+It has not been tested against more recent versions of Liferay.
+
+--------
+BUILDING
+--------
+
+This portlet uses ant for building.
+
+As with all liferay portlets, by default you have to move this portlet directory inside the liferaySDK/portlets directory in order to be able to build it. It's really awkward, but that's how it is.
+
+Once you have this directory in the correct location you can execute the command ant war to get a deployable war of this portlet.
+
+---------
+DEPLOYING
+---------
+
+You can hot deploy this liferay portlet like you would any other. In order to get it working you will have to complete the following steps:
+
+ADDING NEW CUSTOM USER ATTRIBUTE
+
+This portlet depends on a new custom attribute for liferay users called "signature".
+
+1. Login to the portal as an administrator
+2. Select Control Panel from the Dock
+3. Select 'Users' from the Portal section of the left hand nav bar
+4. Click Custom Fields from the top of the panel
+5. Click the Add Custom Fields button
+6. Enter 'signature' in the Key field
+7. Select 'Text Box - Indexed' in the Type field
+8. Select Save. You have now created a Custom Field that will be persisted to the database. By default, the field won't be available for all users, so we'll need to  modify the permissions.
+10. Click the Actions button that corresponds to the signature custom field and select Permissions.
+11. Add a check for Update and View on the Guest role (You may also want to add Update and View permissions for the User role as well if you want users to be able to update their choice through the My Accounts screen)
+12. Click Submit.
+13. Your custom field is now ready to be used.
+
+SETTING SIGNATURES FOR USERS
+
+Since on my portal we don't give non-admin users access to their "My Account" page an admin will have to set/update the signature for each user that needs one. According to the initial project description there will only be a few people that will be sending emails, so only a few signatures will need to be set.
+
+ 1. Login to the portal as an administrator
+ 2. Select Control Panel from the Dock
+ 3. Select Users from the Portal section of the left hand nav bar
+ 4. Search for the user you would like to add/edit the signature for (if you are editing your own signature you can click "My Account" at the top of the left nav in the control panel and skip the next step)
+ 5. Click the Actions button that corresponds to the user and select Edit.
+ 6. Select Custom Attributes on the right (near the bottom)
+ 7. Enter their signature (will be rendered as html, so don't forget to add <br> tags if you don't want it all on one line)
+ 8. Click Save
+
+DATABASE
+
+This portlet is using a mysql database to store the email addresses that will be listed as recipient options in the portlet.
+
+This script will create the database for the first time:
+
+You will need to replace the values for DBPASSWORD, DBUSERNAME, DBHOST, DEANNAME and DEANEMAILADDRESS
+
+	CREATE DATABASE IF NOT EXISTS goodwin_email_portlet;
+	GRANT USAGE ON *.* TO 'DBUSERNAME'@'DBHOST' IDENTIFIED BY 'DBPASSWORD';
+	GRANT ALL PRIVILEGES ON `goodwin_email_portlet`.* TO 'DBUSERNAME'@'DBHOST';
+	USE goodwin_email_portlet;
+	CREATE TABLE addresses (id BIGINT NOT NULL AUTO_INCREMENT primary key, label VARCHAR(256), address VARCHAR(256) );
+	insert into addresses (label,address) values ('Send As Dean', 'DEANEMAILADDRESS');
+	create table authorized_users(full_name varchar(128) not null, screen_name varchar(128) not null primary key);
+	create table authorized_user_addresses(address_id int not null references addresses(id), authorized_user_screen_name varchar(128) not null references authorized_users(screen_name));
+	create table people(id int not null primary key auto_increment, role varchar(128) not null, name varchar(256) not null, address varchar(256) not null);
+
+The 'Send As Dean' functionality allows the user to send the mail as Dean. The permissions to use the "Send As Dean" functionality is managed by same mechanism as the email list. But the Dean's name and the email address are fetched from the portlet.xml. The parameters are 'DeanName' and 'DeanAddress'. 
+
+	insert into people(role, name, address) values("dean", "DEANNAME", "DEANEMAILADDRESS");  
+

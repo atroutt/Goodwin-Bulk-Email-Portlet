@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+
+<portlet-app xmlns="http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd"
+	version="2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd">
+	<portlet>
+		<portlet-name>goodwin-bulk-email</portlet-name>
+		<display-name>Goodwin Bulk Email</display-name>
+		<portlet-class>org.springframework.web.portlet.DispatcherPortlet</portlet-class>
+		<init-param>
+			<name>roleName</name>
+			<value>Goodwin Email Author</value>
+		</init-param>
+		<init-param>
+			<name>adminRoleName</name>
+			<value>Administrator</value>
+		</init-param>
+		<init-param>
+			<name>sendAsDean</name>
+			<value>Send As Dean</value>
+		</init-param>
+		<supports>
+			<mime-type>text/html</mime-type>
+			<portlet-mode>VIEW</portlet-mode>
+			<portlet-mode>EDIT</portlet-mode>
+		</supports>
+		<portlet-info>
+			<title>Goodwin Email</title>
+		</portlet-info>
+	</portlet>
+</portlet-app>

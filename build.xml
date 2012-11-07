@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+
+<project name="portlet" basedir="." default="deploy">
+	<import file="../build-common-portlet.xml" />
+
+	<property name="test.dir" value="test/src" />
+	<property name="build.dir" value="test/build" />
+	<property name="junit.output.dir" value="test/junit-output" />
+	
+	<path id="test.classpath">
+		<path refid="plugin.classpath" />
+		<pathelement location="test/src/" />
+		<pathelement location="test/lib/" />
+		<fileset dir="test/lib/">
+			<include name="*.jar" />
+		</fileset>
+		<pathelement location="${build.dir}" />
+	</path>
+
+	<target name="buildtests" description="Compile test tree java files">
+		<mkdir dir="${build.dir}" />
+		<javac destdir="${build.dir}" source="1.5" target="1.5" debug="true" deprecation="false" optimize="false" failonerror="true">
+			<src path="${test.dir}" />
+			<classpath refid="test.classpath" />
+		</javac>
+	</target>
+				
+	<target name="test" depends="run-test,junitreport,measure-success" description="run the tests, create the reports, fail build if tests fail"/>
+
+	<target name="run-test" depends="compile, buildtests" description="Run tests">
+			<mkdir dir="${junit.output.dir}" />
+			<echo message="basedir: ."/>
+			<junit dir="." fork="true" haltonfailure="false"  failureproperty="tests.failed" showoutput="true" printsummary="withOutAndErr">		
+
+				<classpath refid="test.classpath" />
+			
+				<formatter type="xml" />
+
+				<batchtest todir="${junit.output.dir}">
+					<fileset dir="${test.dir}">
+						<include name="edu/drexel/goodwin/portal/bulkemailportlet/*/*.*" />
+					</fileset>
+				</batchtest>
+			</junit>
+	</target>
+
+	<target name="junitreport">
+			<junitreport todir="${junit.output.dir}">
+				<fileset dir="${junit.output.dir}">
+					<include name="TEST-*.xml" />
+				</fileset>
+				<report format="frames" todir="${junit.output.dir}" />
+			</junitreport>
+	</target>
+				
+	<target name="measure-success">
+		<fail if="tests.failed">
+            tests.failed=${tests.failed}
+            ***********************************************************
+            ***********************************************************
+            ****  One or more tests failed!  Check the output ...  ****
+            ***********************************************************
+            ***********************************************************
+        </fail>
+	</target>
+
+</project>
